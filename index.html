@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Today's list</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F6F8FB;
+    --grid: #DCE4F0;
+    --ink: #1B2A4A;
+    --ink-soft: #5A6A88;
+    --line: #C9D3E3;
+    --marker: #FFE45C;
+    --danger: #B3261E;
+    --surface: #FFFFFF;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121A2B; --grid: #1D2840; --ink: #E6ECF7; --ink-soft: #9AA8C4;
+      --line: #2E3B58; --marker: #8C7A1E; --danger: #FF8A80; --surface: #18223A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #121A2B; --grid: #1D2840; --ink: #E6ECF7; --ink-soft: #9AA8C4;
+    --line: #2E3B58; --marker: #8C7A1E; --danger: #FF8A80; --surface: #18223A;
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.5;
+    color: var(--ink);
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  main { max-width: 36rem; margin: 0 auto; padding: 3rem 1.25rem 4rem; }
+
+  h1 {
+    font-family: "Bricolage Grotesque", "Arial Narrow", sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.6rem, 9vw, 4rem);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 0.35rem;
+  }
+  .date { color: var(--ink-soft); margin: 0 0 2rem; }
+
+  .add { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .add input {
+    flex: 1; min-width: 0;
+    font: inherit; color: var(--ink);
+    background: var(--surface);
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    padding: 0.75rem 0.9rem;
+  }
+  .add input::placeholder { color: var(--ink-soft); }
+  button { font: inherit; cursor: pointer; }
+  .add button {
+    font-weight: 700;
+    color: var(--paper); background: var(--ink);
+    border: 2px solid var(--ink); border-radius: 10px;
+    padding: 0 1.1rem;
+  }
+  :focus-visible { outline: 3px solid var(--marker); outline-offset: 2px; }
+
+  .bar {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 0.75rem; margin-bottom: 0.75rem; color: var(--ink-soft); font-size: 0.95rem;
+  }
+  .filters { display: flex; gap: 0.25rem; }
+  .filters button {
+    background: none; border: 1px solid transparent; border-radius: 999px;
+    color: var(--ink-soft); padding: 0.2rem 0.75rem;
+  }
+  .filters button[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); font-weight: 700; }
+
+  ul { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 2px solid var(--ink); border-radius: 14px; overflow: hidden; }
+  ul:empty { display: none; }
+  li {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.8rem 0.9rem; border-top: 1px solid var(--line);
+  }
+  li:first-child { border-top: 0; }
+  .check {
+    flex: none; width: 1.5rem; height: 1.5rem; border-radius: 6px;
+    border: 2px solid var(--ink); background: none; padding: 0;
+    display: grid; place-items: center; color: var(--ink);
+  }
+  .check svg { width: 1rem; height: 1rem; opacity: 0; }
+  li.done .check { background: var(--marker); }
+  li.done .check svg { opacity: 1; }
+  .text { flex: 1; min-width: 0; overflow-wrap: anywhere; position: relative; }
+  .text span {
+    background-image: linear-gradient(var(--marker), var(--marker));
+    background-repeat: no-repeat; background-position: 0 60%;
+    background-size: 0% 55%;
+    transition: background-size 0.35s ease;
+  }
+  li.done .text span { background-size: 100% 55%; color: var(--ink-soft); }
+  .text input { width: 100%; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 0.15rem 0.4rem; }
+  .del {
+    flex: none; background: none; border: 0; color: var(--ink-soft);
+    width: 2rem; height: 2rem; border-radius: 6px; font-size: 1.25rem; line-height: 1;
+  }
+  .del:hover { color: var(--danger); }
+
+  .empty { text-align: center; color: var(--ink-soft); padding: 2.5rem 1rem; border: 2px dashed var(--line); border-radius: 14px; background: var(--surface); }
+  .hint { color: var(--ink-soft); font-size: 0.875rem; margin-top: 1rem; }
+  .clear { background: none; border: 0; color: var(--ink-soft); text-decoration: underline; padding: 0; }
+  .clear:hover { color: var(--danger); }
+  .clear[hidden] { display: none; }
+
+  @media (prefers-reduced-motion: reduce) { .text span { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Today's list</h1>
+  <p class="date" id="date"></p>
+
+  <form class="add" id="addForm" autocomplete="off">
+    <label for="newTask" class="sr" style="position:absolute;left:-9999px">New task</label>
+    <input id="newTask" type="text" placeholder="What needs doing?" maxlength="200">
+    <button type="submit">Add</button>
+  </form>
+
+  <div class="bar">
+    <span id="count"></span>
+    <div class="filters" role="group" aria-label="Show tasks">
+      <button data-filter="all" aria-pressed="true">All</button>
+      <button data-filter="active" aria-pressed="false">To do</button>
+      <button data-filter="done" aria-pressed="false">Done</button>
+    </div>
+  </div>
+
+  <ul id="list"></ul>
+  <div class="empty" id="empty">Nothing here yet. Add your first task above.</div>
+
+  <p class="hint">Double-click a task to edit it. <button class="clear" id="clearDone" hidden>Clear finished tasks</button></p>
+</main>
+
+<script>
+(function () {
+  const KEY = "todo-list-v1";
+  let tasks = [];
+  let filter = "all";
+
+  try { tasks = JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { tasks = []; }
+  if (!Array.isArray(tasks)) tasks = [];
+
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(tasks)); } catch (e) {} };
+  const $ = (id) => document.getElementById(id);
+  const list = $("list"), empty = $("empty"), count = $("count"), clearBtn = $("clearDone");
+
+  $("date").textContent = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+
+  const checkSvg = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+
+  function render() {
+    const shown = tasks.filter(t => filter === "all" || (filter === "done" ? t.done : !t.done));
+    list.innerHTML = "";
+    shown.forEach(t => {
+      const li = document.createElement("li");
+      if (t.done) li.classList.add("done");
+
+      const check = document.createElement("button");
+      check.className = "check";
+      check.innerHTML = checkSvg;
+      check.setAttribute("aria-label", (t.done ? "Mark as not done: " : "Mark as done: ") + t.text);
+      check.onclick = () => { t.done = !t.done; save(); render(); };
+
+      const text = document.createElement("div");
+      text.className = "text";
+      const span = document.createElement("span");
+      span.textContent = t.text;
+      text.appendChild(span);
+      text.ondblclick = () => startEdit(t, text);
+
+      const del = document.createElement("button");
+      del.className = "del";
+      del.innerHTML = "&times;";
+      del.setAttribute("aria-label", "Delete: " + t.text);
+      del.onclick = () => { tasks = tasks.filter(x => x.id !== t.id); save(); render(); };
+
+      li.append(check, text, del);
+      list.appendChild(li);
+    });
+
+    const left = tasks.filter(t => !t.done).length;
+    const doneCount = tasks.length - left;
+    count.textContent = tasks.length ? `${left} left of ${tasks.length}` : "No tasks";
+    clearBtn.hidden = doneCount === 0;
+
+    if (shown.length === 0) {
+      empty.style.display = "block";
+      empty.textContent = tasks.length === 0 ? "Nothing here yet. Add your first task above."
+        : filter === "done" ? "No finished tasks yet." : "Everything's done. Nice work.";
+    } else {
+      empty.style.display = "none";
+    }
+  }
+
+  function startEdit(t, container) {
+    const input = document.createElement("input");
+    input.value = t.text;
+    input.maxLength = 200;
+    input.setAttribute("aria-label", "Edit task");
+    container.innerHTML = "";
+    container.appendChild(input);
+    input.focus(); input.select();
+    let finished = false;
+    const finish = (keep) => {
+      if (finished) return; finished = true;
+      const v = input.value.trim();
+      if (keep && v) t.text = v;
+      if (keep && !v) tasks = tasks.filter(x => x.id !== t.id);
+      save(); render();
+    };
+    input.onkeydown = (e) => { if (e.key === "Enter") finish(true); if (e.key === "Escape") finish(false); };
+    input.onblur = () => finish(true);
+  }
+
+  $("addForm").onsubmit = (e) => {
+    e.preventDefault();
+    const input = $("newTask");
+    const v = input.value.trim();
+    if (!v) return;
+    tasks.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: v, done: false });
+    input.value = "";
+    save(); render();
+  };
+
+  document.querySelectorAll(".filters button").forEach(b => {
+    b.onclick = () => {
+      filter = b.dataset.filter;
+      document.querySelectorAll(".filters button").forEach(x => x.setAttribute("aria-pressed", x === b));
+      render();
+    };
+  });
+
+  clearBtn.onclick = () => { tasks = tasks.filter(t => !t.done); save(); render(); };
+
+  render();
+})();
+</script>
+</body>
+</html>
